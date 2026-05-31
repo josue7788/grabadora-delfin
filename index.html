@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudio de Grabación — Juego del Delfín 🐬</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#0a2a40;color:#e8f4fd;min-height:100vh;}
+.header{background:linear-gradient(135deg,#0d4d7a,#1a6fa0);padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.4);}
+.header h1{font-size:18px;color:#fff;margin-bottom:2px;}
+.header p{font-size:12px;color:rgba(255,255,255,0.7);}
+.header-stats{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.stat-pill{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;}
+.stat-pill span{font-weight:bold;color:#7ee8a2;}
+.main{padding:16px;max-width:800px;margin:0 auto;}
+.github-guide{background:#071e3d;border:1px solid #1a6fa0;border-radius:12px;padding:16px;margin-bottom:20px;}
+.github-guide h3{font-size:14px;color:#7ee8a2;margin-bottom:10px;}
+.github-guide li{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.6;margin-left:16px;}
+.folder-tree{background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;margin:10px 0;font-family:monospace;font-size:13px;line-height:1.8;color:#b0d4f1;}
+.folder-tree .hl{color:#f5c842;}
+code{background:rgba(255,255,255,0.1);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:12px;color:#7ee8a2;}
+.progress-wrap{background:#0f3350;border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.progress-bar{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#1a6fa0,#7ee8a2);border-radius:4px;transition:width 0.4s;}
+.sec{background:#0f3350;border-radius:14px;margin-bottom:14px;overflow:hidden;}
+.sec-header{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;}
+.sec-header:hover{background:rgba(255,255,255,0.05);}
+.sec-title{font-size:15px;font-weight:bold;color:#fff;}
+.sec-desc{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.sec-done{font-size:12px;font-weight:bold;color:#7ee8a2;}
+.chevron{font-size:14px;color:rgba(255,255,255,0.4);transition:transform 0.2s;}
+.sec.open .chevron{transform:rotate(180deg);}
+.sec-body{display:none;padding:0 12px 12px;}
+.sec.open .sec-body{display:block;}
+.sec.blue .sec-header{border-left:4px solid #1a6fa0;}
+.sec.green .sec-header{border-left:4px solid #3B6D11;}
+.sec.red .sec-header{border-left:4px solid #A32D2D;}
+.sec.purple .sec-header{border-left:4px solid #534AB7;}
+.sec.orange .sec-header{border-left:4px solid #BA7517;}
+.sec.gray .sec-header{border-left:4px solid #888;}
+.sec.teal .sec-header{border-left:4px solid #1D9E75;}
+.sec.gold .sec-header{border-left:4px solid #f5c842;}
+.arow{background:#0a2a40;border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.07);}
+.arow.recorded{border-color:#3B6D11;background:#071e0e;}
+.arow-top{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+.aid{color:#fff;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:bold;white-space:nowrap;font-family:monospace;background:#1a6fa0;}
+.sec.green .aid{background:#3B6D11;}
+.sec.red .aid{background:#A32D2D;}
+.sec.purple .aid{background:#534AB7;}
+.sec.orange .aid{background:#BA7517;}
+.sec.gray .aid{background:#555;}
+.sec.teal .aid{background:#1D9E75;}
+.sec.gold .aid{background:#a07800;color:#fff;}
+.atext{font-size:14px;line-height:1.5;flex:1;color:#e8f4fd;}
+.anote{font-size:11px;color:#7ea8c4;margin-top:2px;font-style:italic;}
+.astatus{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.astatus.empty{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);}
+.astatus.done{background:#1a3d1a;color:#7ee8a2;}
+.arow-controls{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap;}
+.btn{border:none;border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:bold;transition:all 0.15s;display:flex;align-items:center;gap:4px;}
+.btn:active{transform:scale(0.97);}
+.btn-rec{background:#c0392b;color:#fff;}
+.btn-rec.recording{background:#e74c3c;animation:pulse 1s ease-in-out infinite;}
+.btn-stop{background:#555;color:#fff;}
+.btn-play{background:#1a6fa0;color:#fff;}
+.btn-play:disabled{opacity:0.35;cursor:default;}
+.btn-del{background:transparent;color:#c0392b;border:1px solid #c0392b;padding:5px 9px;}
+.btn-dl{background:#BA7517;color:#fff;}
+.rec-timer{font-size:13px;color:#e74c3c;font-family:monospace;min-width:38px;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.5);}50%{box-shadow:0 0 0 8px rgba(231,76,60,0);}}
+.top-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.btn-main{background:#1a6fa0;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;font-weight:bold;}
+.btn-main.green{background:#3B6D11;}
+.btn-main.orange{background:#BA7517;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#0f3350;border-radius:16px;padding:24px;max-width:380px;width:92%;}
+.modal h3{font-size:17px;margin-bottom:8px;}
+.modal p{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:14px;}
+.modal-btns{display:flex;flex-direction:column;gap:8px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:bold;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎙️ Estudio de Grabación — Juego del Delfín Chileno</h1>
+  <p>Graba todos los audios y descárgalos a la carpeta <code>audios/</code> de tu repo del juego</p>
+  <div class="header-stats">
+    <div class="stat-pill">Total: <span id="total-count">0</span></div>
+    <div class="stat-pill">Grabados: <span id="done-count">0</span></div>
+    <div class="stat-pill">Pendientes: <span id="pending-count">0</span></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="github-guide">
+    <h3>📂 Estructura de carpetas en el repo del juego</h3>
+    <div class="folder-tree">
+📁 repo-juego/<br>
+├── <span class="hl">index.html</span><br>
+└── 📁 <span class="hl">audios/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── ok_01.webm &nbsp;← descarga aquí<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── phrase_hint_01.webm<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── phrase_01_word_01.webm<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── phrase_complete_01.webm<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── ... todos los archivos
+    </div>
+    <ol>
+      <li>Graba cada audio con el botón ⏺ y descárgalo con ⬇</li>
+      <li>Sube los <code>.webm</code> a la carpeta <code>audios/</code> en GitHub — el juego los carga automáticamente</li>
+      <li>Si prefieres <code>.mp3</code>, convierte en <a href="https://cloudconvert.com/webm-to-mp3" target="_blank" style="color:#7ee8a2;">cloudconvert.com</a></li>
+    </ol>
+  </div>
+
+  <div class="progress-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span style="font-size:12px;color:rgba(255,255,255,0.6);">Progreso general</span>
+      <span style="font-size:24px;font-weight:bold;color:#7ee8a2;" id="pct-label">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="top-bar">
+    <button class="btn-main" onclick="expandAll()">📂 Expandir todo</button>
+    <button class="btn-main" onclick="collapseAll()">📁 Colapsar</button>
+    <button class="btn-main green" onclick="showOnlyPending()">⏳ Pendientes</button>
+    <button class="btn-main orange" onclick="exportAll()">📦 Descargar todos</button>
+  </div>
+
+  <div id="sections-container"></div>
+</div>
+
+<div class="modal-bg" id="export-modal">
+  <div class="modal">
+    <h3>📦 Descargar todos los audios</h3>
+    <p>Se descargarán todos los grabados como <code>.webm</code>. Súbelos a la carpeta <code>audios/</code> en GitHub.</p>
+    <p style="color:#f5c842;font-size:12px;">⚠️ Algunos navegadores bloquean descargas múltiples. Si pasa, descarga de uno en uno.</p>
+    <div class="modal-btns">
+      <button class="btn-main" onclick="doExport()">✅ Descargar todos</button>
+      <button class="btn-main" style="background:#555;" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTIONS=[
+  {id:'menu',label:'🏠 Menú / Bienvenida',color:'blue',desc:'Al abrir la app o volver al menú',items:[
+    {id:'menu_01',text:'¡Hola Joseph! ¿Listo para aprender sobre el delfín chileno?'},
+    {id:'menu_02',text:'¡Bienvenido Tuti! ¡Hoy vamos a conocer a la tonina!'},
+    {id:'menu_03',text:'¡A jugar, Joseph! Elige tu actividad favorita.'},
+    {id:'menu_04',text:'¿Qué quieres hacer hoy, Tuti?'},
+  ]},
+  {id:'ok',label:'✅ Respuestas correctas — Refuerzo positivo',color:'green',desc:'Alternar Joseph / Tuti. Tono muy entusiasta.',items:[
+    {id:'ok_01',text:'¡Muy bien, Joseph! ¡Eso es correcto!'},{id:'ok_02',text:'¡Muy bien, Tuti! ¡Lo lograste!'},
+    {id:'ok_03',text:'¡Excelente trabajo, Joseph! ¡Eres muy inteligente!'},{id:'ok_04',text:'¡Good job, Tuti! ¡Así se hace!'},
+    {id:'ok_05',text:'¡Vas muy bien, Joseph! ¡Sigue así!'},{id:'ok_06',text:'¡Increíble, Tuti! ¡Eso estuvo genial!'},
+    {id:'ok_07',text:'¡Eres un campeón, Joseph! ¡Muy bien!'},{id:'ok_08',text:'¡Wow, Tuti! ¡Qué inteligente eres!'},
+    {id:'ok_09',text:'¡Perfecto, Joseph! ¡Lo sabías!'},{id:'ok_10',text:'¡Super bien, Tuti! ¡Esa es la respuesta!'},
+    {id:'ok_11',text:'¡Bravo, Joseph! ¡Cada vez sabes más!'},{id:'ok_12',text:'¡Fantástico, Tuti! ¡El delfín estaría orgulloso de ti!'},
+    {id:'ok_13',text:'¡Eso es, Joseph! ¡Sabía que tú podías!'},{id:'ok_14',text:'¡Bien hecho, Tuti! ¡Eres un experto en delfines!'},
+    {id:'ok_15',text:'¡Correcto, Joseph! ¡Qué buena memoria tienes!'},{id:'ok_16',text:'¡Woow, Tuti! ¡Eres todo un científico del mar!'},
+  ]},
+  {id:'fail',label:'❌ Respuestas incorrectas — Apoyo',color:'red',desc:'Tono cálido y alentador. Nunca frustrante.',items:[
+    {id:'fail_01',text:'¡Casi, Joseph! Inténtalo de nuevo, tú puedes.'},{id:'fail_02',text:'No fue esa, Tuti. ¡Pero sigue intentando!'},
+    {id:'fail_03',text:'¡Ups, Joseph! Esa no era. ¡Vamos de nuevo!'},{id:'fail_04',text:'No te preocupes, Tuti. ¡Equivocarse también es aprender!'},
+    {id:'fail_05',text:'¡Eso no era, Joseph! Pero vas muy bien igual.'},{id:'fail_06',text:'¡Casi, Tuti! Mira la respuesta correcta y la aprenderás.'},
+    {id:'fail_07',text:'¡No importa, Joseph! Todos nos equivocamos. ¡Tú puedes!'},{id:'fail_08',text:'Esa no era, Tuti. ¡Aprende la respuesta y la próxima la tienes!'},
+  ]},
+  {id:'quiz',label:'🎯 Modo Preguntas — Inicio y entre preguntas',color:'blue',desc:'Al entrar al modo quiz y entre preguntas',items:[
+    {id:'quiz_start_01',text:'¡Hora de las preguntas, Joseph! ¿Cuántas puedes responder bien?'},
+    {id:'quiz_start_02',text:'¡Vamos, Tuti! ¡Demuestra todo lo que sabes del delfín chileno!'},
+    {id:'quiz_next_01',text:'Siguiente pregunta, Joseph.'},{id:'quiz_next_02',text:'¡Vamos a la siguiente, Tuti!'},
+  ]},
+  {id:'result',label:'🏆 Resultados finales del Quiz',color:'green',desc:'Según puntaje: alto (90%+), medio (60-89%), bajo (menos de 60%)',items:[
+    {id:'result_high_01',text:'¡Increíble, Joseph! ¡Puntaje perfecto! ¡Eres un experto en delfines!',note:'Puntaje 90% o más'},
+    {id:'result_high_02',text:'¡Wow, Tuti! ¡Lo hiciste genial! ¡Casi todo correcto!',note:'Puntaje 90% o más'},
+    {id:'result_mid_01',text:'¡Muy bien, Joseph! ¡Vas aprendiendo muy rápido! ¡Sigue así!',note:'Puntaje 60–89%'},
+    {id:'result_mid_02',text:'¡Buen trabajo, Tuti! ¡Cada vez sabes más sobre la tonina!',note:'Puntaje 60–89%'},
+    {id:'result_low_01',text:'¡Sigue practicando, Joseph! ¡La próxima vez lo harás mejor!',note:'Menos de 60%'},
+    {id:'result_low_02',text:'¡No te rindas, Tuti! ¡Vuelve a intentarlo y verás que puedes!',note:'Menos de 60%'},
+  ]},
+  {id:'mem',label:'🧩 Modo Memoria',color:'purple',desc:'Inicio, pareja encontrada, error y final',items:[
+    {id:'mem_start_01',text:'¡Memoria, Joseph! Encuentra las parejas del delfín. ¡Tú puedes!'},
+    {id:'mem_start_02',text:'¡A jugar memoria, Tuti! ¿Cuántas parejas encuentras?'},
+    {id:'mem_match_01',text:'¡Pareja encontrada, Joseph! ¡Excelente!'},{id:'mem_match_02',text:'¡Así es, Tuti! ¡Una pareja más!'},
+    {id:'mem_match_03',text:'¡Bien hecho, Joseph! ¡Qué buena memoria tienes!'},
+    {id:'mem_fail_01',text:'¡Esas no hacen pareja, Tuti! ¡Sigue buscando!'},{id:'mem_fail_02',text:'¡No son pareja, Joseph! ¡Tú puedes encontrarlas!'},
+    {id:'mem_win_01',text:'¡Encontraste todas las parejas, Joseph! ¡Eres increíble!'},{id:'mem_win_02',text:'¡Lo lograste, Tuti! ¡Tienes una memoria super poderosa!'},
+  ]},
+  {id:'phrase_nav',label:'📝 Modo Oración — Inicio y final',color:'orange',desc:'Al entrar al modo y al completar todas las oraciones',items:[
+    {id:'phrase_start_01',text:'¡Arma las oraciones, Joseph! Toca las palabras en el orden correcto.'},
+    {id:'phrase_start_02',text:'¡Ordena las palabras, Tuti! ¡Tú puedes hacerlo!'},
+    {id:'phrase_ok_01',text:'¡Oración perfecta, Joseph! ¡Lo armaste muy bien!'},{id:'phrase_ok_02',text:'¡Muy bien, Tuti! ¡Esa oración quedó perfecta!'},
+    {id:'phrase_ok_03',text:'¡Genial, Joseph! ¡Las palabras están en el orden correcto!'},
+    {id:'phrase_fail_01',text:'¡Casi, Tuti! Intenta ordenarlas de nuevo.'},{id:'phrase_fail_02',text:'¡Ese orden no es correcto, Joseph! ¡Vuelve a intentarlo!'},
+    {id:'phrase_win_01',text:'¡Completaste todas las oraciones, Joseph! ¡Eres un crack!'},{id:'phrase_win_02',text:'¡Lo hiciste genial, Tuti! ¡Todas las oraciones correctas!'},
+  ]},
+  {id:'phrase_01',label:'📝 Oración 1: "El delfín chileno se llama Tonina."',color:'gold',desc:'Pista + cada palabra por separado + oración completa',items:[
+    {id:'phrase_hint_01',text:'¿Cómo se llama también el delfín chileno? Completa: El delfín chileno se llama ___ .',note:'🔊 Pista — se reproduce automáticamente al cargar la oración'},
+    {id:'phrase_01_word_01',text:'El',note:'Palabra 1'},
+    {id:'phrase_01_word_02',text:'delfín',note:'Palabra 2'},
+    {id:'phrase_01_word_03',text:'chileno',note:'Palabra 3'},
+    {id:'phrase_01_word_04',text:'se',note:'Palabra 4'},
+    {id:'phrase_01_word_05',text:'llama',note:'Palabra 5'},
+    {id:'phrase_01_word_06',text:'Tonina',note:'Palabra 6'},
+    {id:'phrase_complete_01',text:'El delfín chileno se llama Tonina.',note:'🔊 Oración completa — se reproduce al verificar correctamente'},
+  ]},
+  {id:'phrase_02',label:'📝 Oración 2: "El delfín vive en las costas de Chile."',color:'gold',desc:'Pista + cada palabra por separado + oración completa',items:[
+    {id:'phrase_hint_02',text:'¿Dónde vive el delfín chileno? Completa: El delfín vive en las ___ de Chile.',note:'🔊 Pista — se reproduce automáticamente al cargar la oración'},
+    {id:'phrase_02_word_01',text:'El',note:'Palabra 1'},
+    {id:'phrase_02_word_02',text:'delfín',note:'Palabra 2'},
+    {id:'phrase_02_word_03',text:'vive',note:'Palabra 3'},
+    {id:'phrase_02_word_04',text:'en',note:'Palabra 4'},
+    {id:'phrase_02_word_05',text:'las',note:'Palabra 5'},
+    {id:'phrase_02_word_06',text:'costas',note:'Palabra 6'},
+    {id:'phrase_02_word_07',text:'de',note:'Palabra 7'},
+    {id:'phrase_02_word_08',text:'Chile',note:'Palabra 8'},
+    {id:'phrase_complete_02',text:'El delfín vive en las costas de Chile.',note:'🔊 Oración completa — se reproduce al verificar correctamente'},
+  ]},
+  {id:'phrase_03',label:'📝 Oración 3: "El delfín come peces, calamares y camarones."',color:'gold',desc:'Pista + cada palabra por separado + oración completa',items:[
+    {id:'phrase_hint_03',text:'¿Qué come el delfín chileno? Completa: El delfín come ___ , ___ y ___ .',note:'🔊 Pista — se reproduce automáticamente al cargar la oración'},
+    {id:'phrase_03_word_01',text:'El',note:'Palabra 1'},
+    {id:'phrase_03_word_02',text:'delfín',note:'Palabra 2'},
+    {id:'phrase_03_word_03',text:'come',note:'Palabra 3'},
+    {id:'phrase_03_word_04',text:'peces',note:'Palabra 4'},
+    {id:'phrase_03_word_05',text:'calamares',note:'Palabra 5'},
+    {id:'phrase_03_word_06',text:'y',note:'Palabra 6'},
+    {id:'phrase_03_word_07',text:'camarones',note:'Palabra 7'},
+    {id:'phrase_complete_03',text:'El delfín come peces, calamares y camarones.',note:'🔊 Oración completa — se reproduce al verificar correctamente'},
+  ]},
+  {id:'phrase_04',label:'📝 Oración 4: "El delfín se comunica con silbidos y clics."',color:'gold',desc:'Pista + cada palabra por separado + oración completa',items:[
+    {id:'phrase_hint_04',text:'¿Cómo habla el delfín chileno? Completa: El delfín se comunica con ___ y ___ .',note:'🔊 Pista — se reproduce automáticamente al cargar la oración'},
+    {id:'phrase_04_word_01',text:'El',note:'Palabra 1'},
+    {id:'phrase_04_word_02',text:'delfín',note:'Palabra 2'},
+    {id:'phrase_04_word_03',text:'se',note:'Palabra 3'},
+    {id:'phrase_04_word_04',text:'comunica',note:'Palabra 4'},
+    {id:'phrase_04_word_05',text:'con',note:'Palabra 5'},
+    {id:'phrase_04_word_06',text:'silbidos',note:'Palabra 6'},
+    {id:'phrase_04_word_07',text:'y',note:'Palabra 7'},
+    {id:'phrase_04_word_08',text:'clics',note:'Palabra 8'},
+    {id:'phrase_complete_04',text:'El delfín se comunica con silbidos y clics.',note:'🔊 Oración completa — se reproduce al verificar correctamente'},
+  ]},
+  {id:'phrase_05',label:'📝 Oración 5: "El delfín prefiere las aguas frías."',color:'gold',desc:'Pista + cada palabra por separado + oración completa',items:[
+    {id:'phrase_hint_05',text:'¿Qué agua prefiere el delfín chileno? Completa: El delfín prefiere las aguas ___ .',note:'🔊 Pista — se reproduce automáticamente al cargar la oración'},
+    {id:'phrase_05_word_01',text:'El',note:'Palabra 1'},
+    {id:'phrase_05_word_02',text:'delfín',note:'Palabra 2'},
+    {id:'phrase_05_word_03',text:'prefiere',note:'Palabra 3'},
+    {id:'phrase_05_word_04',text:'las',note:'Palabra 4'},
+    {id:'phrase_05_word_05',text:'aguas',note:'Palabra 5'},
+    {id:'phrase_05_word_06',text:'frías',note:'Palabra 6'},
+    {id:'phrase_complete_05',text:'El delfín prefiere las aguas frías.',note:'🔊 Oración completa — se reproduce al verificar correctamente'},
+  ]},
+
+  {id:'quiz_questions',label:'🎯 Preguntas del Quiz — Frases completas',color:'blue',desc:'El juego lee cada pregunta completa al cargar. Habla con entonación de pregunta.',items:[
+    {id:'quiz_q_01',text:'¿Cómo se llama también al delfín chileno?'},
+    {id:'quiz_q_02',text:'¿De qué colores es el delfín chileno?'},
+    {id:'quiz_q_03',text:'¿Qué come el delfín chileno?'},
+    {id:'quiz_q_04',text:'¿Dónde vive el delfín chileno?'},
+    {id:'quiz_q_05',text:'¿Qué tipo de agua prefiere el delfín chileno?'},
+    {id:'quiz_q_06',text:'¿Cómo vive el delfín chileno?'},
+    {id:'quiz_q_07',text:'¿Cómo se comunica el delfín chileno?'},
+    {id:'quiz_q_08',text:'¿Cómo respira el delfín chileno?'},
+  ]},
+  {id:'quiz_opts_q01',label:'🎯 Quiz — Opciones Pregunta 1 (¿Cómo se llama?)',color:'blue',desc:'Graba cada opción por separado. Se leen después de la pregunta con pausa entre ellas.',items:[
+    {id:'quiz_q01_opt_a',text:'Tonina',note:'Opción A'},
+    {id:'quiz_q01_opt_b',text:'Ballena azul',note:'Opción B'},
+    {id:'quiz_q01_opt_c',text:'Tiburón',note:'Opción C'},
+    {id:'quiz_q01_opt_d',text:'Foca',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q02',label:'🎯 Quiz — Opciones Pregunta 2 (¿De qué colores?)',color:'blue',desc:'',items:[
+    {id:'quiz_q02_opt_a',text:'Rojo y amarillo',note:'Opción A'},
+    {id:'quiz_q02_opt_b',text:'Gris, negro y blanco',note:'Opción B'},
+    {id:'quiz_q02_opt_c',text:'Azul y verde',note:'Opción C'},
+    {id:'quiz_q02_opt_d',text:'Café y naranja',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q03',label:'🎯 Quiz — Opciones Pregunta 3 (¿Qué come?)',color:'blue',desc:'',items:[
+    {id:'quiz_q03_opt_a',text:'Algas y plantas',note:'Opción A'},
+    {id:'quiz_q03_opt_b',text:'Peces, calamares y camarones',note:'Opción B'},
+    {id:'quiz_q03_opt_c',text:'Solo plancton',note:'Opción C'},
+    {id:'quiz_q03_opt_d',text:'Medusas',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q04',label:'🎯 Quiz — Opciones Pregunta 4 (¿Dónde vive?)',color:'blue',desc:'',items:[
+    {id:'quiz_q04_opt_a',text:'En el río Amazonas',note:'Opción A'},
+    {id:'quiz_q04_opt_b',text:'En el mar Mediterráneo',note:'Opción B'},
+    {id:'quiz_q04_opt_c',text:'En las costas de Chile',note:'Opción C'},
+    {id:'quiz_q04_opt_d',text:'En el Polo Norte',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q05',label:'🎯 Quiz — Opciones Pregunta 5 (¿Qué agua?)',color:'blue',desc:'',items:[
+    {id:'quiz_q05_opt_a',text:'Agua caliente tropical',note:'Opción A'},
+    {id:'quiz_q05_opt_b',text:'Agua dulce de ríos',note:'Opción B'},
+    {id:'quiz_q05_opt_c',text:'Aguas frías',note:'Opción C'},
+    {id:'quiz_q05_opt_d',text:'Agua salada tibia',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q06',label:'🎯 Quiz — Opciones Pregunta 6 (¿Cómo vive?)',color:'blue',desc:'',items:[
+    {id:'quiz_q06_opt_a',text:'Solo, sin amigos',note:'Opción A'},
+    {id:'quiz_q06_opt_b',text:'En grupos con otros delfines',note:'Opción B'},
+    {id:'quiz_q06_opt_c',text:'Con ballenas',note:'Opción C'},
+    {id:'quiz_q06_opt_d',text:'Siempre de a dos',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q07',label:'🎯 Quiz — Opciones Pregunta 7 (¿Cómo se comunica?)',color:'blue',desc:'',items:[
+    {id:'quiz_q07_opt_a',text:'Con silbidos y clics',note:'Opción A'},
+    {id:'quiz_q07_opt_b',text:'Con mugidos',note:'Opción B'},
+    {id:'quiz_q07_opt_c',text:'Con ladridos',note:'Opción C'},
+    {id:'quiz_q07_opt_d',text:'No se comunica',note:'Opción D'},
+  ]},
+  {id:'quiz_opts_q08',label:'🎯 Quiz — Opciones Pregunta 8 (¿Cómo respira?)',color:'blue',desc:'',items:[
+    {id:'quiz_q08_opt_a',text:'Con branquias bajo el agua',note:'Opción A'},
+    {id:'quiz_q08_opt_b',text:'Sale a la superficie a respirar aire',note:'Opción B'},
+    {id:'quiz_q08_opt_c',text:'Absorbe oxígeno del agua',note:'Opción C'},
+    {id:'quiz_q08_opt_d',text:'No necesita respirar',note:'Opción D'},
+  ]},
+  {id:'mem_cards',label:'🧩 Memoria — Audio de cada tarjeta',color:'green',desc:'Se reproduce al voltear cada tarjeta. Los emojis y textos son del mismo par.',items:[
+    {id:'mem_card_dolphin',text:'Delfín chileno',note:'Tarjeta emoji 🐬 — di "delfín chileno"'},
+    {id:'mem_card_tonina',text:'Tonina',note:'Tarjeta texto — di "Tonina"'},
+    {id:'mem_card_fish',text:'Come peces',note:'Tarjeta emoji 🐟 — di "come peces"'},
+    {id:'mem_card_eatfish',text:'Come peces',note:'Tarjeta texto — di "come peces"'},
+    {id:'mem_card_cold',text:'Aguas frías',note:'Tarjeta emoji ❄️ — di "aguas frías"'},
+    {id:'mem_card_coldtxt',text:'Agua fría',note:'Tarjeta texto — di "agua fría"'},
+    {id:'mem_card_map',text:'Costa de Chile',note:'Tarjeta emoji 🗺️ — di "costa de Chile"'},
+    {id:'mem_card_maptxt',text:'Costa de Chile',note:'Tarjeta texto — di "costa de Chile"'},
+    {id:'mem_card_sound',text:'Silbidos',note:'Tarjeta emoji 🔊 — di "silbidos"'},
+    {id:'mem_card_soundtxt',text:'Silbidos',note:'Tarjeta texto — di "silbidos"'},
+    {id:'mem_card_group',text:'Vive en grupos',note:'Tarjeta emoji 👥 — di "vive en grupos"'},
+    {id:'mem_card_grouptxt',text:'En grupos',note:'Tarjeta texto — di "en grupos"'},
+  ]},
+  {id:'facts_narr',label:'⭐ Datos Curiosos — Narración de cada dato',color:'teal',desc:'El juego reproduce estos audios automáticamente al mostrar cada dato. Habla despacio y claro.',items:[
+    {id:'fact_01',text:'El delfín chileno también se llama Tonina. Es uno de los delfines más pequeños del mundo y vive solo en Chile.'},
+    {id:'fact_02',text:'Vive en las costas de Chile, desde Arica hasta Tierra del Fuego. ¡Eso es todo lo largo de nuestro país!'},
+    {id:'fact_03',text:'Le gustan las aguas frías. Por eso se siente muy cómodo en el sur de Chile, donde el mar es bien fresquito.'},
+    {id:'fact_04',text:'Su cuerpo tiene tres colores: gris en la espalda, negro en los costados y blanco en la barriga.'},
+    {id:'fact_05',text:'Come peces, calamares y camarones. Sale a buscar su comida nadando muy rápido con sus amigos.'},
+    {id:'fact_06',text:'Vive en grupos de varios delfines. ¡Le gusta tener compañía y jugar con otros delfines!'},
+    {id:'fact_07',text:'Se comunica con silbidos y clics. Es como si hablara un idioma secreto bajo el agua.'},
+    {id:'fact_08',text:'Aunque vive en el mar, respira aire como nosotros. Sube a la superficie y toma aire por un hueco en la cabeza.'},
+    {id:'fact_09',text:'Puede vivir más de veinte años. ¡Es más viejo que muchos papás!'},
+    {id:'fact_10',text:'Debemos cuidarlo: no botar basura al mar, no contaminar el agua. ¡El delfín chileno necesita nuestro mar limpio!'},
+  ]},
+  {id:'facts_nav',label:'⭐ Datos Curiosos — Navegación',color:'gray',desc:'Frases al entrar, pasar datos y terminar',items:[
+    {id:'facts_start_01',text:'¡Vamos a aprender datos curiosos del delfín chileno, Joseph!'},{id:'facts_start_02',text:'¡Datos súper interesantes para ti, Tuti! ¡Presta atención!'},
+    {id:'facts_next_01',text:'¡Otro dato más, Joseph! ¡Cada vez sabes más!'},{id:'facts_next_02',text:'¡Mira esto, Tuti! ¿Lo sabías?'},
+    {id:'facts_end_01',text:'¡Ahora sabes todo sobre el delfín chileno, Joseph! ¡Qué inteligente!'},{id:'facts_end_02',text:'¡Leíste todos los datos, Tuti! ¡Eres un experto de la tonina!'},
+  ]},
+  {id:'bye',label:'👋 Despedida',color:'blue',desc:'Al volver al menú o cerrar la app',items:[
+    {id:'bye_01',text:'¡Hasta pronto, Joseph! ¡Vuelve a jugar pronto!'},{id:'bye_02',text:'¡Chao, Tuti! ¡El delfín te espera la próxima vez!'},
+    {id:'bye_03',text:'¡Nos vemos pronto, Joseph! ¡Eres un campeón!'},
+  ]},
+];
+
+// ── INDEXEDDB ──
+const DB_NAME='delfin_audios_v2',DB_STORE='blobs';let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=e=>e.target.result.createObjectStore(DB_STORE);r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=rej;});}
+function saveBlob(id,blob){return new Promise((res,rej)=>{const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(blob,id);tx.oncomplete=res;tx.onerror=rej;});}
+function getBlob(id){return new Promise(res=>{const tx=db.transaction(DB_STORE,'readonly');const r=tx.objectStore(DB_STORE).get(id);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}
+function deleteBlob(id){return new Promise(res=>{const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).delete(id);tx.oncomplete=res;});}
+function getAllKeys(){return new Promise(res=>{const tx=db.transaction(DB_STORE,'readonly');const r=tx.objectStore(DB_STORE).getAllKeys();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}
+
+let mediaRecorder=null,activeId=null,chunks=[],timerInterval=null,timerSecs=0,recordedIds=new Set();
+
+function buildUI(){
+  const container=document.getElementById('sections-container');container.innerHTML='';
+  let total=0;
+  SECTIONS.forEach(sec=>{
+    total+=sec.items.length;
+    const div=document.createElement('div');div.className=`sec ${sec.color}`;div.id=`sec_${sec.id}`;
+    const done=sec.items.filter(i=>recordedIds.has(i.id)).length;
+    div.innerHTML=`<div class="sec-header" onclick="toggleSec('sec_${sec.id}')"><div><div class="sec-title">${sec.label}</div><div class="sec-desc">${sec.desc}</div></div><div style="display:flex;align-items:center;gap:10px;"><span class="sec-done" id="secbadge_${sec.id}">${done}/${sec.items.length}</span><span class="chevron">▼</span></div></div><div class="sec-body">${sec.items.map(item=>buildRow(item,sec)).join('')}</div>`;
+    container.appendChild(div);
+  });
+  document.getElementById('total-count').textContent=total;updateStats();
+}
+
+function buildRow(item,sec){
+  const done=recordedIds.has(item.id);
+  return `<div class="arow${done?' recorded':''}" id="row_${item.id}">
+  <div class="arow-top">
+    <span class="aid">${item.id}</span>
+    <span class="atext">${item.text}${item.note?`<div class="anote">${item.note}</div>`:''}</span>
+    <span class="astatus ${done?'done':'empty'}" id="status_${item.id}">${done?'✅':'⏺'}</span>
+  </div>
+  <div class="arow-controls">
+    <button class="btn btn-rec" id="recbtn_${item.id}" onclick="startRec('${item.id}')">⏺ Grabar</button>
+    <button class="btn btn-stop" id="stopbtn_${item.id}" onclick="stopRec('${item.id}')" style="display:none">⏹ Detener</button>
+    <span class="rec-timer" id="timer_${item.id}" style="display:none">0:00</span>
+    <button class="btn btn-play" id="playbtn_${item.id}" onclick="playAudio('${item.id}')" ${done?'':'disabled'}>▶</button>
+    <button class="btn btn-dl" id="dlbtn_${item.id}" onclick="downloadOne('${item.id}')" style="${done?'':'display:none'}">⬇ .webm</button>
+    <button class="btn btn-del" id="delbtn_${item.id}" onclick="deleteOne('${item.id}')" style="${done?'':'display:none'}">🗑</button>
+  </div>
+  <audio id="audio_${item.id}" style="display:none" preload="none"></audio>
+</div>`;
+}
+
+async function startRec(id){
+  if(activeId&&activeId!==id){showToast('⚠️ Detén la grabación actual primero');return;}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[];activeId=id;
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+    mediaRecorder.onstop=()=>finishRec(id,stream);
+    mediaRecorder.start(100);
+    document.getElementById(`recbtn_${id}`).style.display='none';
+    document.getElementById(`stopbtn_${id}`).style.display='flex';
+    document.getElementById(`timer_${id}`).style.display='inline';
+    timerSecs=0;
+    timerInterval=setInterval(()=>{timerSecs++;const m=Math.floor(timerSecs/60),s=timerSecs%60;document.getElementById(`timer_${id}`).textContent=`${m}:${s.toString().padStart(2,'0')}`;},1000);
+  }catch(e){showToast('❌ Sin acceso al micrófono');}
+}
+
+async function stopRec(id){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();clearInterval(timerInterval);}
+
+async function finishRec(id,stream){
+  stream.getTracks().forEach(t=>t.stop());
+  const blob=new Blob(chunks,{type:'audio/webm'});
+  await saveBlob(id,blob);recordedIds.add(id);activeId=null;
+  const row=document.getElementById(`row_${id}`);row.classList.add('recorded');
+  document.getElementById(`recbtn_${id}`).style.display='flex';
+  document.getElementById(`stopbtn_${id}`).style.display='none';
+  document.getElementById(`timer_${id}`).style.display='none';
+  document.getElementById(`status_${id}`).textContent='✅';
+  document.getElementById(`status_${id}`).className='astatus done';
+  document.getElementById(`playbtn_${id}`).disabled=false;
+  document.getElementById(`dlbtn_${id}`).style.display='flex';
+  document.getElementById(`delbtn_${id}`).style.display='flex';
+  document.getElementById(`audio_${id}`).src=URL.createObjectURL(blob);
+  updateSecBadge(id);updateStats();showToast('✅ Guardado: '+id);
+}
+
+async function playAudio(id){
+  const audio=document.getElementById(`audio_${id}`);
+  if(!audio.src||audio.src===window.location.href){const blob=await getBlob(id);if(!blob){showToast('Sin audio');return;}audio.src=URL.createObjectURL(blob);}
+  audio.play();
+}
+
+async function downloadOne(id){
+  const blob=await getBlob(id);if(!blob)return;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=id+'.webm';a.click();
+  showToast('⬇ '+id+'.webm');
+}
+
+async function deleteOne(id){
+  if(!confirm(`¿Eliminar "${id}"?`))return;
+  await deleteBlob(id);recordedIds.delete(id);
+  const row=document.getElementById(`row_${id}`);row.classList.remove('recorded');
+  document.getElementById(`status_${id}`).textContent='⏺';document.getElementById(`status_${id}`).className='astatus empty';
+  document.getElementById(`playbtn_${id}`).disabled=true;
+  document.getElementById(`dlbtn_${id}`).style.display='none';document.getElementById(`delbtn_${id}`).style.display='none';
+  document.getElementById(`audio_${id}`).src='';
+  updateSecBadge(id);updateStats();showToast('🗑 '+id);
+}
+
+function exportAll(){document.getElementById('export-modal').classList.add('show');}
+function closeModal(){document.getElementById('export-modal').classList.remove('show');}
+async function doExport(){
+  closeModal();const keys=await getAllKeys();if(!keys.length){showToast('No hay audios grabados');return;}
+  showToast('⬇ Descargando '+keys.length+' archivos...');
+  for(const key of keys){const blob=await getBlob(key);if(!blob)continue;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=key+'.webm';a.click();await new Promise(r=>setTimeout(r,350));}
+}
+
+function toggleSec(id){document.getElementById(id).classList.toggle('open');}
+function expandAll(){document.querySelectorAll('.sec').forEach(s=>s.classList.add('open'));}
+function collapseAll(){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('open'));}
+function showOnlyPending(){
+  expandAll();
+  document.querySelectorAll('.arow').forEach(r=>{r.style.display=r.classList.contains('recorded')?'none':'';});
+  showToast('Solo pendientes');
+}
+function updateSecBadge(id){
+  for(const sec of SECTIONS){if(sec.items.some(i=>i.id===id)){const done=sec.items.filter(i=>recordedIds.has(i.id)).length;const b=document.getElementById(`secbadge_${sec.id}`);if(b)b.textContent=`${done}/${sec.items.length}`;break;}}
+}
+function updateStats(){
+  const total=SECTIONS.reduce((a,s)=>a+s.items.length,0),done=recordedIds.size;
+  document.getElementById('done-count').textContent=done;document.getElementById('pending-count').textContent=total-done;
+  const pct=Math.round((done/total)*100);document.getElementById('pct-label').textContent=pct+'%';document.getElementById('prog-fill').style.width=pct+'%';
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),2600);}
+
+async function init(){
+  await openDB();const keys=await getAllKeys();keys.forEach(k=>recordedIds.add(k));
+  buildUI();document.querySelector('.sec').classList.add('open');
+}
+init();
+</script>
+</body>
+</html>
